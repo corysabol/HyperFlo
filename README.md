@@ -16,4 +16,4 @@ HyperFlo is an application and visual data flow programming language for impleme
 ## TODO
 
 ## Contributing
-See [contributing.md](contributing.md)
+See [CONTRIBUTING.md](.github/CONTRIBUTING.md)
