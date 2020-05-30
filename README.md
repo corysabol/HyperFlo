@@ -14,3 +14,6 @@ HyperFlo is an application and visual data flow programming language for impleme
 - [Deno Core](https://crates.io/crates/deno_core)
 
 ## TODO
+
+## Contributing
+See [contributing.md](contributing.md)
