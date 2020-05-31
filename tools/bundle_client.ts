@@ -1,13 +1,19 @@
 import { assert } from "https://deno.land/std/testing/asserts.ts";
-const tsConfig: any = JSON.parse(await Deno.readTextFile("./tsconfig.json"));
+const tsConfig: any = JSON.parse(await Deno.readTextFile("./src/client/tsconfig.json"));
 const compilerOptions: any = tsConfig["compilerOptions"];
 const [diagnostics, emit] = await Deno.bundle(
-  "./client/app.ts",
+  "./src/client/app.ts",
   undefined,
   compilerOptions
 );
-console.log(diagnostics);
-console.log(emit);
-//assert(diagnostics === undefined);
+if (diagnostics) {
+  for (let diag of diagnostics) {
+    for (let key in diag) {
+      console.log(`${key}: ${(diag as any)[key]}`)
+    } 
+  }
+}
+assert(diagnostics === undefined);
 // write the bundle out to disk
-await Deno.writeTextFile("./client/app.bundle.js", emit);
+// need to emit this to a better build directory...
+await Deno.writeTextFile("./src/client/app.bundle.js", emit);
