@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate derive_deref;
-
 //use deno_core::CoreIsolate;
 //use deno_core::Op;
 //use deno_core::ResourceTable;
@@ -29,8 +26,6 @@ fn main() {
         app = include_str!("./client/app.bundle.js")
     );
 
-    println!("{}", html_content);
-
     web_view::builder()
         .title("HyperFlo - HTTP dataflow programming tool.")
         .content(Content::Html(html_content))
@@ -39,7 +34,6 @@ fn main() {
         .debug(true)
         .user_data(0)
         .invoke_handler(|webview, arg| {
-            let blah = webview.user_data_mut();
             match arg {
                 "foo" => {
                     println!("Wow so cool!");

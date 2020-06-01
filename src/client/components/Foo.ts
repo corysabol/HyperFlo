@@ -10,7 +10,7 @@ export class Foo extends HTMLElement {
 
     this._name = "World";
 
-    this.shadowRoot.attachShadow({ mode: "open" }); 
+    this.attachShadow({ mode: "open" }); 
     this.render();
   }
 

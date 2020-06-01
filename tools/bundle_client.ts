@@ -9,11 +9,11 @@ const [diagnostics, emit] = await Deno.bundle(
 if (diagnostics) {
   for (let diag of diagnostics) {
     for (let key in diag) {
-      console.log(`${key}: ${(diag as any)[key]}`)
+      console.error(`${key}: ${(diag as any)[key]}`)
     } 
   }
 }
-assert(diagnostics === undefined);
+
 // write the bundle out to disk
 // need to emit this to a better build directory...
 await Deno.writeTextFile("./src/client/app.bundle.js", emit);

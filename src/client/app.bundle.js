@@ -116,7 +116,7 @@ System.register("components/Foo", [], function (exports_1, context_1) {
                 constructor() {
                     super();
                     this._name = "World";
-                    this.shadowRoot.attachShadow({ mode: "open" });
+                    this.attachShadow({ mode: "open" });
                     this.render();
                 }
                 static get observedAttributes() {
@@ -154,9 +154,8 @@ System.register("app", ["components/Foo"], function (exports_2, context_2) {
     var Foo_ts_1;
     var __moduleName = context_2 && context_2.id;
     function app() {
-        window.customElements.define("foo", Foo_ts_1.Foo);
+        window.customElements.define("foo-component", Foo_ts_1.Foo);
     }
-    exports_2("app", app);
     return {
         setters: [
             function (Foo_ts_1_1) {
@@ -169,5 +168,4 @@ System.register("app", ["components/Foo"], function (exports_2, context_2) {
     };
 });
 
-const __exp = __instantiate("app");
-export const app = __exp["app"];
+__instantiate("app");
