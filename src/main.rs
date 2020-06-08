@@ -16,9 +16,44 @@
 //use tokio::io::AsyncWrite;
 //use tokio::net::TcpListener;
 //use tokio::net::TcpStream;
+use std::thread;
 use web_view::*;
+use notify::{Watcher, RecommendedWatcher, RecursiveMode, Result};
 
-fn main() {
+mod dev {
+    use web_view::*;
+    use std::sync::Arc;
+    use std::thread;
+    use notify::{Watcher, RecommendedWatcher, RecursiveMode, Result};
+    pub fn client_dev_mode(path: &str, wv: WebView<usize>) -> Result<()> {
+        // Automatically select the best implementation for your platform.
+        let wv_handle = wv.handle();
+        let mut watcher: RecommendedWatcher = Watcher::new_immediate(move |res| {
+            match res {
+                Ok(event) => {
+                    println!("event: {:?}", event);
+                    //wv.eval(&format!("alert('this was triggered by a fs event!')"));
+                    wv_handle.dispatch(move |wv| {
+                        wv.eval(&format!("console.log('this was triggered by a fs event: {:?}')", event))
+                    });
+                },
+                Err(e) => println!("watch error: {:?}", e),
+            }
+        })?;
+
+
+        // Add a path to be watched. All files and directories at that path and
+        // below will be monitored for changes.
+        watcher.watch(path, RecursiveMode::Recursive);
+        wv.run().unwrap();
+        loop {};
+
+        Ok(())
+    }
+}
+
+fn main() -> Result<()> {
+    // if dev mode watch the client dir and rebuild the client app on change
     // create a web view
     let html_content = format!(
         include_str!("./client/index.html"),
@@ -26,7 +61,7 @@ fn main() {
         app = include_str!("./client/app.bundle.js")
     );
 
-    web_view::builder()
+    let webview = web_view::builder()
         .title("HyperFlo - HTTP dataflow programming tool.")
         .content(Content::Html(html_content))
         .size(800, 600)
@@ -46,8 +81,19 @@ fn main() {
                 _ => unimplemented!(),
             }
         })
-        .run()
+        .build()
         .unwrap();
+    let dev = true;
+    if dev {
+        // this will block though :(
+        dev::client_dev_mode("./src/client", webview)?; 
+    } else {
+        webview
+            .run()
+            .unwrap();
+    }
+
+    Ok(())
     /*let mut isolate = deno_core::CoreIsolate::new(
         deno_core::StartupData::Script(Script{
             source: "",
