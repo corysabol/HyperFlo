@@ -1,2 +1,2 @@
 /target
-/src/client/app.bundle.js
+./src/client/app.bundle.js
