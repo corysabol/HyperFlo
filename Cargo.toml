@@ -13,3 +13,4 @@ futures = "0.3.5"
 tokio = { version = "0.2.21", features = ["rt-core", "tcp"] }
 web-view = { version = "0.6.2" }
 notify = "5.0.0-pre.2"
+base64 = "0.12.1"

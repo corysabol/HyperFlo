@@ -27,7 +27,7 @@ export class Foo extends HTMLElement {
     t.innerHTML = `
       <style>
         :host {
-          color: green;
+          color: red;
         }
       </style>
       <h1>Hello ${this._name}</h1>

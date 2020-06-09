@@ -24,18 +24,76 @@ mod dev {
     use web_view::*;
     use std::sync::Arc;
     use std::thread;
+    use std::io::prelude::*;
+    use std::fs::File;
+    use std::path::Path;
+    use std::process::Command;
+    use std::ffi::OsStr;
     use notify::{Watcher, RecommendedWatcher, RecursiveMode, Result};
+    use notify::event::*;
+    use notify::EventKind::*;
+    use notify::event::AccessKind::*;
+
+    extern crate base64;
+
+    fn exec_client_build() {
+        let output = Command::new("just")
+            .arg("build-client")
+            .output().unwrap_or_else(|e| {
+                panic!("failed to execute process: {}", e)
+            });
+
+        if output.status.success() {
+            let s = String::from_utf8_lossy(&output.stdout);
+            print!("{}", s);
+        } else {
+            let s = String::from_utf8_lossy(&output.stderr);
+            print!("{}", s);
+        }
+    }
+
     pub fn client_dev_mode(path: &str, wv: WebView<usize>) -> Result<()> {
         // Automatically select the best implementation for your platform.
         let wv_handle = wv.handle();
-        let mut watcher: RecommendedWatcher = Watcher::new_immediate(move |res| {
+        let mut watcher: RecommendedWatcher = Watcher::new_immediate(move |res: Result<Event>| {
             match res {
                 Ok(event) => {
-                    println!("event: {:?}", event);
-                    //wv.eval(&format!("alert('this was triggered by a fs event!')"));
-                    wv_handle.dispatch(move |wv| {
-                        wv.eval(&format!("console.log('this was triggered by a fs event: {:?}')", event))
-                    });
+                    // match on the event
+                    if let Access(Close(mode)) = &event.kind {
+                        match mode {
+                            Write => {
+                                println!("{:?}", event.kind);
+                                // unwrap all the things!
+                                let mut paths = event.paths;
+                                let path_buf = paths.pop().unwrap();
+                                let filename_osstr = path_buf.file_name();
+                                if filename_osstr == Some(OsStr::new("app.bundle.js")) {
+                                    // read in the bundle
+                                    let mut file = match File::open(path_buf) {
+                                        Err(e) => panic!("couldn't open file: {}", e),
+                                        Ok(file) => file,
+                                    };
+                                    let mut s = String::new();
+                                    match file.read_to_string(&mut s) {
+                                        Err(e) => panic!("couldn't read file: {}", e),
+                                        Ok(_) => println!("{}", s),
+                                    };
+                                    wv_handle.dispatch(|wv| {
+                                        wv.eval(&format!(r#"
+                                        var scr = document.querySelector('#app');
+                                        scr.innerHTML = ""; // clear the inner contents
+                                        scr.src = `data:text/javascript;base64,{}`;
+                                        var e = document.querySelector('html');
+                                        window.location = `data:text/html,${{encodeURIComponent(e.innerHTML)}}`;
+                                        "#, base64::encode(s)))
+                                    });
+                                } else {
+                                    exec_client_build() 
+                                }
+                            },
+                            _ => exec_client_build(),
+                        }
+                    }
                 },
                 Err(e) => println!("watch error: {:?}", e),
             }
@@ -47,8 +105,6 @@ mod dev {
         watcher.watch(path, RecursiveMode::Recursive);
         wv.run().unwrap();
         loop {};
-
-        Ok(())
     }
 }
 
@@ -85,12 +141,9 @@ fn main() -> Result<()> {
         .unwrap();
     let dev = true;
     if dev {
-        // this will block though :(
         dev::client_dev_mode("./src/client", webview)?; 
     } else {
-        webview
-            .run()
-            .unwrap();
+        webview.run().unwrap();
     }
 
     Ok(())
