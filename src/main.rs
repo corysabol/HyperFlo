@@ -76,7 +76,7 @@ mod dev {
                                     let mut s = String::new();
                                     match file.read_to_string(&mut s) {
                                         Err(e) => panic!("couldn't read file: {}", e),
-                                        Ok(_) => println!("{}", s),
+                                        Ok(_) => (),
                                     };
                                     wv_handle.dispatch(|wv| {
                                         wv.eval(&format!(r#"
